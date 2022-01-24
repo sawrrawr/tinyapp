@@ -12,7 +12,7 @@ const urlDatabase = {
 
 // index page
 app.get("/", (req, res) => {
-  // res.render('pages/index');
+  res.write(`Hello`);
 });
 
 // list of URLs and their corresponding shortURLS
@@ -21,8 +21,14 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 });
 
+//path to the form to create a new shortURL
+app.get("/urls/new", (req, res) => {
+  // const templateVars = 
+  res.render("urls_new")
+});
+
 // lists the particulars of one longURL/shortURL pair
-app.get("/urls/:shortURL", (req, res) => {
+app.get("/urls/:id", (req, res) => {
   const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]}
   res.render("urls_show", templateVars)
 });
