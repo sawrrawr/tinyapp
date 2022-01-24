@@ -15,11 +15,13 @@ app.get("/", (req, res) => {
   // res.render('pages/index');
 });
 
+// list of URLs and their corresponding shortURLS
 app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase };
   res.render("urls_index", templateVars);
 });
 
+// lists the particulars of one longURL/shortURL pair
 app.get("/urls/:shortURL", (req, res) => {
   const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]}
   res.render("urls_show", templateVars)
