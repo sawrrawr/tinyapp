@@ -5,6 +5,21 @@ const PORT = 8080;
 //setting the view engine to ejs
 app.set('view engine', 'ejs');
 
+// using body parser
+const bodyParser = require("body-parser");
+app.use(bodyParser.urlencoded({extended: true}));
+
+const charSet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+const generateRandomString = () => {
+  newString = [];
+  for (let i = 0; i < 6; i++) {
+    let indexNum = Math.floor(Math.random() * charSet.length);
+    newString.push(charSet.charAt(indexNum));
+  }
+  return newString.join("");
+};
+
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com",
@@ -31,6 +46,11 @@ app.get("/urls/new", (req, res) => {
 app.get("/urls/:id", (req, res) => {
   const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]}
   res.render("urls_show", templateVars)
+});
+
+app.post("/urls", (req, res) => {
+  console.log(req.body);  // Log the POST request body to the console
+  res.send("Ok");         // Respond with 'Ok' (we will replace this)
 });
 
 //setting the port & message
