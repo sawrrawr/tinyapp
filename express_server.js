@@ -2,6 +2,10 @@ const express = require("express");
 const app = express();
 const PORT = 8080;
 
+//using cookie parser
+const cookieParser = require("cookie-parser");
+app.use(cookieParser());
+
 //setting the view engine to ejs
 app.set('view engine', 'ejs');
 
@@ -27,24 +31,30 @@ const urlDatabase = {
 
 // index page
 app.get("/", (req, res) => {
-  res.write(`Hello`);
+  res.send(`Hello`);
+});
+
+//login
+app.post('/login', (req, res) => {
+  res.cookie('username', req.body.username);
+  res.redirect('/urls');
 });
 
 // list of URLs and their corresponding shortURLS
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase };
+  const templateVars = { urls: urlDatabase, username: req.cookies.username,};
   res.render("urls_index", templateVars);
 });
 
 //path to the form to create a new shortURL
 app.get("/urls/new", (req, res) => {
-  // const templateVars =
-  res.render("urls_new");
+  const templateVars = { username: req.cookies.username, }
+  res.render("urls_new", templateVars);
 });
 
 // lists the particulars of one longURL/shortURL pair
 app.get("/urls/:id", (req, res) => {
-  const templateVars = { shortURL: req.params.id, longURL: urlDatabase[req.params.id]};
+  const templateVars = { shortURL: req.params.id, longURL: urlDatabase[req.params.id], username: req.cookies.username, };
   res.render("urls_show", templateVars);
 });
 
