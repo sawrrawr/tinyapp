@@ -15,6 +15,7 @@ app.use(bodyParser.urlencoded({extended: true}));
 
 const charSet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
+// generates the shortURL
 const generateRandomString = () => {
   let newString = [];
   for (let i = 0; i < 6; i++) {
@@ -39,6 +40,12 @@ app.post('/login', (req, res) => {
   res.cookie('username', req.body.username);
   res.redirect('/urls');
 });
+
+//logout
+app.post('/logout', (req, res) => {
+  res.clearCookie("username");
+  res.redirect('/urls');
+})
 
 // list of URLs and their corresponding shortURLS
 app.get("/urls", (req, res) => {
