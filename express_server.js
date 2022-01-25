@@ -12,7 +12,7 @@ app.use(bodyParser.urlencoded({extended: true}));
 const charSet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
 const generateRandomString = () => {
-  newString = [];
+  let newString = [];
   for (let i = 0; i < 6; i++) {
     let indexNum = Math.floor(Math.random() * charSet.length);
     newString.push(charSet.charAt(indexNum));
@@ -38,14 +38,14 @@ app.get("/urls", (req, res) => {
 
 //path to the form to create a new shortURL
 app.get("/urls/new", (req, res) => {
-  // const templateVars = 
-  res.render("urls_new")
+  // const templateVars =
+  res.render("urls_new");
 });
 
 // lists the particulars of one longURL/shortURL pair
 app.get("/urls/:id", (req, res) => {
-  const templateVars = { shortURL: req.params.id, longURL: urlDatabase[req.params.id]}
-  res.render("urls_show", templateVars)
+  const templateVars = { shortURL: req.params.id, longURL: urlDatabase[req.params.id]};
+  res.render("urls_show", templateVars);
 });
 
 // handles the POST request from the urls/new form
@@ -61,6 +61,13 @@ app.post("/urls", (req, res) => {
 app.get("/u/:shortURL", (req, res) => {
   const longURL = urlDatabase[req.params.shortURL];
   res.redirect(longURL);
+});
+
+//handling the delete button for an entry
+app.post('/urls/:shortURL/delete', (req, res) => {
+  delete urlDatabase[req.params.shortURL];
+  res.redirect('/urls');
+
 });
 
 //setting the port & message
