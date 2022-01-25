@@ -51,9 +51,9 @@ app.get("/urls/:id", (req, res) => {
 // handles the POST request from the urls/new form
 app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
-  // if (!urlDatabase.shortURL) {
+  if (!urlDatabase.shortURL) {
   urlDatabase[shortURL] = `http://${req.body.longURL}`;
-  // };
+  };
   console.log(urlDatabase);
   res.redirect(`/urls/${shortURL}`);         // Respond to user: redirecting to their new entry
 });
@@ -67,7 +67,19 @@ app.get("/u/:shortURL", (req, res) => {
 app.post('/urls/:shortURL/delete', (req, res) => {
   delete urlDatabase[req.params.shortURL];
   res.redirect('/urls');
+});
 
+//handling the edit button for an entry
+app.post('/urls/:shortURL', (req, res) => {
+  const shortURL = req.params.shortURL;
+ res.redirect(`/urls/${shortURL}`);
+});
+
+//updating a URL entry
+app.post('/urls/:shortURL/update', (req, res) => {
+  const shortURL = req.params.shortURL
+  urlDatabase[shortURL] = `http://${req.body.longURL}`
+  res.redirect(`/urls/${shortURL}`);
 });
 
 //setting the port & message
