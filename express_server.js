@@ -44,13 +44,23 @@ app.get("/urls/new", (req, res) => {
 
 // lists the particulars of one longURL/shortURL pair
 app.get("/urls/:id", (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]}
+  const templateVars = { shortURL: req.params.id, longURL: urlDatabase[req.params.id]}
   res.render("urls_show", templateVars)
 });
 
+// handles the POST request from the urls/new form
 app.post("/urls", (req, res) => {
-  console.log(req.body);  // Log the POST request body to the console
-  res.send("Ok");         // Respond with 'Ok' (we will replace this)
+  const shortURL = generateRandomString();
+  // if (!urlDatabase.shortURL) {
+  urlDatabase[shortURL] = `http://${req.body.longURL}`;
+  // };
+  console.log(urlDatabase);
+  res.redirect(`/urls/${shortURL}`);         // Respond to user: redirecting to their new entry
+});
+
+app.get("/u/:shortURL", (req, res) => {
+  const longURL = urlDatabase[req.params.shortURL];
+  res.redirect(longURL);
 });
 
 //setting the port & message
