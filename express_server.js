@@ -47,6 +47,17 @@ app.post('/logout', (req, res) => {
   res.redirect('/urls');
 })
 
+//register for an account
+app.get('/register', (req, res) => {
+  const templateVars = { username: req.cookies.username, }
+  res.render("register", templateVars)
+});
+
+app.post('/register', (req, res) => {
+
+
+});
+
 // list of URLs and their corresponding shortURLS
 app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase, username: req.cookies.username,};
