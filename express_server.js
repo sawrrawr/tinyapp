@@ -30,49 +30,138 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com",
 };
 
+const users = {
+  "user1ID": {
+    id: "user1ID",
+    email: "user@example.com",
+    password: "password",
+  },
+  "320943": {
+    id: "320943",
+    email: "sawrrawr@gmail.com",
+    password: "123",
+  },
+
+}
+
+//Authentication functoin
+const auth = (emailAddress, pwd) => {
+  const listOfUsers = Object.values(users);
+  let result;
+  for (const user of listOfUsers) {
+    if (user.email === emailAddress  && user.password === pwd) {
+      return result = 'success';
+    }
+    if (user.email === emailAddress  && user.password !== pwd) {
+      return result = 'failedPwd';
+    }
+    if (user.email !== emailAddress) {
+      return result = 'failedEmail';
+    }
+  }
+  return result
+}
+
+//email address lookup
+const emailAlreadyExists = (emailAddress) => {
+  const listOfUsers = Object.values(users);
+  for (let user of listOfUsers) {
+    if (user.email !== emailAddress) {
+      //email doesn't already exist
+      return false;
+    }
+    //email already exists
+    return true;
+  }
+};
+
+
 // index page
 app.get("/", (req, res) => {
   res.send(`Hello`);
 });
 
+//login page
+app.get('/login', (req, res) => {
+  const templateVars = { user: users[req.cookies.user_id], }
+  res.render("login", templateVars)
+});
+
 //login
 app.post('/login', (req, res) => {
-  res.cookie('username', req.body.username);
-  res.redirect('/urls');
+  const listOfUsers = Object.values(users)
+  const user_email = req.body.email;
+  const user_pw = req.body.password;
+  let user_id;
+  const loginAttempt = auth(user_email, user_pw);
+  console.log(loginAttempt)
+  if (loginAttempt === 'success') {
+    for (const user of listOfUsers) {
+      if (user.email === user_email) {
+        user_id = user.id;
+      }
+    }
+    console.log(`user id set to ${user_id}`)
+    res.cookie('user_id', user_id);
+    res.redirect('/urls');
+  } else if (loginAttempt === 'failedEmail') {
+    res.status(400).send(`Invalid Email`);
+  } else if (loginAttempt === 'failedPwd') {
+    res.status(400).send(`Invalid Password`);
+  }
 });
 
 //logout
 app.post('/logout', (req, res) => {
-  res.clearCookie("username");
+  res.clearCookie("user_id");
   res.redirect('/urls');
 })
 
 //register for an account
 app.get('/register', (req, res) => {
-  const templateVars = { username: req.cookies.username, }
+  const templateVars = { user: users[req.cookies.user_id], }
   res.render("register", templateVars)
 });
 
 app.post('/register', (req, res) => {
-
-
+  newUserId = generateRandomString();
+  if (!req.body.email) {
+    res.status(400).send(`Please enter an email address`)
+  }
+  if (!req.body.password) {
+    res.status(400).send(`Please enter a password`);
+  }
+  const emailCheck = emailAlreadyExists(req.body.email)
+  if (emailCheck === true) {
+    res.status(400).send(`An account with this email already exists`);
+  }
+  if (emailCheck === false) {
+    users[newUserId] = {
+      "id": newUserId,
+      "email": req.body.email,
+      "password": req.body.password,
+    }
+    console.log(users);
+    res.cookie('user_id', newUserId)
+  }
+  res.redirect('/urls')
 });
 
 // list of URLs and their corresponding shortURLS
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase, username: req.cookies.username,};
+  const templateVars = { urls: urlDatabase, user: users[req.cookies.user_id],};
   res.render("urls_index", templateVars);
 });
 
 //path to the form to create a new shortURL
 app.get("/urls/new", (req, res) => {
-  const templateVars = { username: req.cookies.username, }
+  const templateVars = { user: users[req.cookies.user_id], }
   res.render("urls_new", templateVars);
 });
 
 // lists the particulars of one longURL/shortURL pair
 app.get("/urls/:id", (req, res) => {
-  const templateVars = { shortURL: req.params.id, longURL: urlDatabase[req.params.id], username: req.cookies.username, };
+  const templateVars = { shortURL: req.params.id, longURL: urlDatabase[req.params.id], user: users[req.cookies.user_id], };
   res.render("urls_show", templateVars);
 });
 
