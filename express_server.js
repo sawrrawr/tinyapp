@@ -65,13 +65,13 @@ const auth = (emailAddress, pwd) => {
 //email address lookup
 const emailAlreadyExists = (emailAddress) => {
   const listOfUsers = Object.values(users);
-  for (let user of listOfUsers) {
-    if (user.email !== emailAddress) {
-      //email doesn't already exist
-      return false;
+  for (const user of listOfUsers) {
+    if (user["email"] === emailAddress) {
+      //email already exists
+      return true;
     }
-    //email already exists
-    return true;
+    //email doesn't already exist
+    return false;
   }
 };
 
@@ -94,20 +94,18 @@ app.post('/login', (req, res) => {
   const user_pw = req.body.password;
   let user_id;
   const loginAttempt = auth(user_email, user_pw);
-  console.log(loginAttempt)
   if (loginAttempt === 'success') {
     for (const user of listOfUsers) {
       if (user.email === user_email) {
         user_id = user.id;
       }
     }
-    console.log(`user id set to ${user_id}`)
     res.cookie('user_id', user_id);
     res.redirect('/urls');
   } else if (loginAttempt === 'failedEmail') {
-    res.status(400).send(`Invalid Email`);
+    res.status(403).send(`Invalid Email`);
   } else if (loginAttempt === 'failedPwd') {
-    res.status(400).send(`Invalid Password`);
+    res.status(403).send(`Invalid Password`);
   }
 });
 
@@ -117,21 +115,23 @@ app.post('/logout', (req, res) => {
   res.redirect('/urls');
 })
 
-//register for an account
+//registration page
 app.get('/register', (req, res) => {
   const templateVars = { user: users[req.cookies.user_id], }
   res.render("register", templateVars)
 });
 
+// register for new account
 app.post('/register', (req, res) => {
+  const user_email = req.body.email
   newUserId = generateRandomString();
-  if (!req.body.email) {
+  if (!user_email) {
     res.status(400).send(`Please enter an email address`)
   }
-  if (!req.body.password) {
+  if (!user_email) {
     res.status(400).send(`Please enter a password`);
   }
-  const emailCheck = emailAlreadyExists(req.body.email)
+  const emailCheck = emailAlreadyExists(user_email)
   if (emailCheck === true) {
     res.status(400).send(`An account with this email already exists`);
   }
@@ -141,10 +141,10 @@ app.post('/register', (req, res) => {
       "email": req.body.email,
       "password": req.body.password,
     }
-    console.log(users);
     res.cookie('user_id', newUserId)
+    res.redirect('/urls')
   }
-  res.redirect('/urls')
+  console.log(users);
 });
 
 // list of URLs and their corresponding shortURLS
