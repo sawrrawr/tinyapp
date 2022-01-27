@@ -2,6 +2,10 @@ const express = require("express");
 const app = express();
 const PORT = 8080;
 
+//hashing module
+const bcrypt = require('bcryptjs');
+const salt = bcrypt.genSaltSync(10);
+
 //using cookie parser
 const cookieParser = require("cookie-parser");
 app.use(cookieParser());
@@ -40,12 +44,12 @@ const users = {
   "user1ID": {
     id: "user1ID",
     email: "user@example.com",
-    password: "password",
+    password: bcrypt.hashSync("password", salt),
   },
   "320943": {
     id: "320943",
     email: "sawrrawr@gmail.com",
-    password: "123",
+    password: bcrypt.hashSync("123", salt),
   },
 
 }
@@ -55,10 +59,10 @@ const auth = (emailAddress, pwd) => {
   const listOfUsers = Object.values(users);
   let result;
   for (const user of listOfUsers) {
-    if (user.email === emailAddress  && user.password === pwd) {
+    if (user.email === emailAddress  && bcrypt.compareSync(pwd, user.password) === true) {
       return result = 'success';
     }
-    if (user.email === emailAddress  && user.password !== pwd) {
+    if (user.email === emailAddress  && bcrypt.compareSync(pwd, user.password) === false) {
       return result = 'failedPwd';
     }
     if (user.email !== emailAddress) {
@@ -160,7 +164,7 @@ app.post('/register', (req, res) => {
     users[newUserId] = {
       "id": newUserId,
       "email": req.body.email,
-      "password": req.body.password,
+      "password": bcrypt.hashSync(req.body.password, salt),
     }
     res.cookie('user_id', newUserId)
     res.redirect('/urls')
