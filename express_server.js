@@ -17,16 +17,6 @@ app.set('view engine', 'ejs');
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
 
-// generates the shortURL
-const charSet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-const generateRandomString = () => {
-  let newString = [];
-  for (let i = 0; i < 6; i++) {
-    let indexNum = Math.floor(Math.random() * charSet.length);
-    newString.push(charSet.charAt(indexNum));
-  }
-  return newString.join("");
-};
 
 //objects
 const urlDatabase = {
@@ -53,8 +43,21 @@ const users = {
   },
 };
 
+//functions
+//generate random ID for short URL
+const charSet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+const generateRandomString = () => {
+  let newString = [];
+  for (let i = 0; i < 6; i++) {
+    let indexNum = Math.floor(Math.random() * charSet.length);
+    newString.push(charSet.charAt(indexNum));
+  }
+  return newString.join("");
+};
+const result = generateRandomString();
+
 //Authentication function
-const auth = (emailAddress, pwd) => {
+const authorizeLogin = (emailAddress, pwd) => {
   const listOfUsers = Object.values(users);
   let result;
   for (const user of listOfUsers) {
@@ -71,7 +74,7 @@ const auth = (emailAddress, pwd) => {
   return result;
 };
 
-// get URLs for user
+// get list of URLs belonging to user
 const urlsForUser = (id) => {
   const userURLS = {};
   const listOfURLS = Object.keys(urlDatabase);
@@ -83,6 +86,7 @@ const urlsForUser = (id) => {
   return userURLS;
 };
 
+// ROUTES //
 
 // home page
 app.get("/", (req, res) => {
@@ -96,13 +100,13 @@ app.get('/login', (req, res) => {
   res.render("login", templateVars);
 });
 
-//login
+//login requst
 app.post('/login', (req, res) => {
   const listOfUsers = Object.values(users);
   const user_email = req.body.email;
   const user_pw = req.body.password;
   let user_id;
-  const loginAttempt = auth(user_email, user_pw);
+  const loginAttempt = authorizeLogin(user_email, user_pw);
   if (loginAttempt === 'success') {
     for (const user of listOfUsers) {
       if (user.email === user_email) {
@@ -118,7 +122,7 @@ app.post('/login', (req, res) => {
   }
 });
 
-//logout
+//logout request
 app.post('/logout', (req, res) => {
   req.session.user_id = null;
   res.redirect('/');
@@ -152,7 +156,6 @@ app.post('/register', (req, res) => {
   } else {
     res.status(400).send(`An account with this email already exists`);
   }
-  console.log(users);
 });
 
 // list of URLs and their corresponding shortURLS
@@ -165,7 +168,7 @@ app.get("/urls", (req, res) => {
   }
 });
 
-//page to create a new shortURL
+//page to create a new longURL/shortURL pair
 app.get("/urls/new", (req, res) => {
   const templateVars = { user: users[req.session.user_id], };
   if (req.session.user_id) {
@@ -181,18 +184,30 @@ app.get("/urls/:id", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
-// handles the POST request from the urls/new form
+// creates a new shortURL/longURL pair
 app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
-  if (!urlDatabase.shortURL) {
-    if (urlDatabase[shortURL]["longURL"].includes('://')) {
-      urlDatabase[shortURL]["longURL"] = req.body.longURL;
+  if (!urlDatabase[shortURL]) {
+    if (req.body.longURL.includes('://')) {
+      newUrlEntry = {
+        "longURL": req.body.longURL,
+        "userID": req.session.user_id,
+      }
+      urlDatabase[shortURL] = newEntry;
+    } else {
+      newUrlEntry = {
+        "longURL": `http://${req.body.longURL}`,
+        "userID": req.session.user_id,
+      }
+      urlDatabase[shortURL] = newUrlEntry;
     }
-    urlDatabase[shortURL]["longURL"] = `http://${req.body.longURL}`;
-  }
-  res.redirect(`/urls/${shortURL}`);         // Respond to user: redirecting to their new entry
+  };
+  // Redirects to the new entry
+  res.redirect(`/urls/${shortURL}`);         
 });
 
+
+//redirects to the longURL
 app.get("/u/:shortURL", (req, res) => {
   if (!urlDatabase[req.params.shortURL]) {
     res.status(403).send('That URL does not exist');
@@ -214,12 +229,10 @@ app.post('/urls/:shortURL/delete', (req, res) => {
   }
 });
 
+//ensures URL belongs to user in order to navigate to its page
 app.get('/urls/:shortURL', (req, res) => {
   const shortURL = req.params.shortURL;
   const userID = req.session.user_id;
-  console.log(`the shortURL is ${shortURL}`);
-  console.log(`the userID is ${userID}`);
-  console.log(`the id of this URL is: ${urlDatabase[shortURL]["userID"]}`);
   if (urlDatabase[shortURL]["userID"] === userID) {
     res.redirect(`/urls/${shortURL}`);
   } else {
@@ -232,9 +245,6 @@ app.get('/urls/:shortURL', (req, res) => {
 app.post('/urls/:shortURL', (req, res) => {
   const shortURL = req.params.shortURL;
   const userID = req.session.user_id;
-  console.log(`the shortURL is ${shortURL}`);
-  console.log(`the userID is ${userID}`);
-  console.log(`the id of this URL is: ${urlDatabase[shortURL]["userID"]}`);
   if (urlDatabase[shortURL]["userID"] === userID) {
     res.redirect(`/urls/${shortURL}`);
   } else {
@@ -242,7 +252,7 @@ app.post('/urls/:shortURL', (req, res) => {
   }
 });
 
-//updating a URL entry
+//updating(editing) a URL entry
 app.post('/urls/:shortURL/update', (req, res) => {
   const shortURL = req.params.shortURL;
   const userID = req.session.user_id;

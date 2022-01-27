@@ -1,7 +1,9 @@
 const chai = require('chai');
 const assert = chai.assert;
-const getUserByEmail = require('../helpers.js');
+const getUserByEmail = require('../helpers');
 
+
+// for getUserByEmail
 const testUsers = {
   "userRandomID": {
     id: "userRandomID",
@@ -15,8 +17,12 @@ const testUsers = {
   }
 };
 
+
+
+// TESTS //
+
 describe('getUserByEmail', function() {
-  it('should return a user with valid email', function() {
+  it('should return a user with valid email', () => {
     const user = getUserByEmail("user@example.com", testUsers);
     const expectedUser = testUsers["userRandomID"];
     assert.deepEqual(expectedUser, user);
@@ -26,3 +32,4 @@ describe('getUserByEmail', function() {
     assert.equal(user, undefined);
   });
 });
+
