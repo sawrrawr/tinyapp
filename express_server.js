@@ -32,7 +32,7 @@ const urlDatabase = {
   },
   "9sm5xK": {
     longURL: "http://www.google.com",
-    userID: "320943",
+    userID: "user1ID",
   }
 };
 
@@ -68,6 +68,20 @@ const auth = (emailAddress, pwd) => {
   return result
 }
 
+// get URLs for user
+const urlsForUser = (id) => {
+  const userURLS = {};
+  const listOfURLS = Object.keys(urlDatabase)
+  console.log('list of urls', listOfURLS);
+for (const entry of listOfURLS) {
+  if (urlDatabase[entry].userID === id) {
+    userURLS[entry] = urlDatabase[entry]
+  }
+}
+console.log(`url object from function: ${userURLS}`)
+return userURLS;
+}
+
 //email address lookup
 const emailAlreadyExists = (emailAddress) => {
   const listOfUsers = Object.values(users);
@@ -82,9 +96,10 @@ const emailAlreadyExists = (emailAddress) => {
 };
 
 
-// index page
+// home page
 app.get("/", (req, res) => {
-  res.send(`Hello`);
+  const templateVars = { user: users[req.cookies.user_id], }
+  res.render("home", templateVars);
 });
 
 //login page
@@ -118,7 +133,7 @@ app.post('/login', (req, res) => {
 //logout
 app.post('/logout', (req, res) => {
   res.clearCookie("user_id");
-  res.redirect('/urls');
+  res.redirect('/');
 })
 
 //registration page
@@ -155,8 +170,14 @@ app.post('/register', (req, res) => {
 
 // list of URLs and their corresponding shortURLS
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase, user: users[req.cookies.user_id],};
-  res.render("urls_index", templateVars);
+  if (req.cookies.user_id) {
+  //  userURLS = urlsForUser(req.cookies.user_id);
+  //  console.log(userURLS);
+    const templateVars = { urls: urlsForUser(req.cookies.user_id), user: users[req.cookies.user_id],};
+    res.render("urls_index", templateVars);
+  } else if (req.cookies.user_id === 'undefined' || !req.cookies.user_id) {
+    res.status(403).send(`Please register or login to access your URLs!`);
+  }
 });
 
 //page to create a new shortURL
@@ -171,7 +192,7 @@ app.get("/urls/new", (req, res) => {
 
 // lists the particulars of one longURL/shortURL pair
 app.get("/urls/:id", (req, res) => {
-  const templateVars = { shortURL: req.params.id, longURL: urlDatabase[req.params.id]["longURL"], user: users[req.cookies.user_id], };
+  const templateVars = { shortURL: req.params.id, longURL: urlDatabase[req.params.id].longURL, user: users[req.cookies.user_id], };
   res.render("urls_show", templateVars);
 });
 
@@ -189,27 +210,68 @@ app.post("/urls", (req, res) => {
 });
 
 app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL]["longURL"];
-  res.redirect(longURL);
+  if (!urlDatabase[req.params.shortURL]) {
+    res.status(403).send('That URL does not exist');
+  } else {
+    const longURL = urlDatabase[req.params.shortURL]["longURL"];
+    res.redirect(longURL);
+  }
 });
 
 //handling the delete button for an entry
 app.post('/urls/:shortURL/delete', (req, res) => {
+  const shortURL = req.params.shortURL
+  const userID = req.cookies.user_id
+  if (urlDatabase[shortURL]["userID"] === userID) {
   delete urlDatabase[req.params.shortURL];
   res.redirect('/urls');
+  } else {
+  res.status(403).send(`You do not have permission to delete this URL entry!`)
+  }
 });
+
+app.get('/urls/:shortURL', (req, res) => {
+  const shortURL = req.params.shortURL;
+  const userID = req.cookies.user_id;
+  console.log(`the shortURL is ${shortURL}`);
+  console.log(`the userID is ${userID}`);
+  console.log(`the id of this URL is: ${urlDatabase[shortURL]["userID"]}`);
+  if (urlDatabase[shortURL]["userID"] === userID) {
+  res.redirect(`/urls/${shortURL}`);
+  } else {
+    res.status(403).send(`You do not have permission to edit this URL entry!`)
+  }
+});
+
 
 //handling the edit button for an entry
 app.post('/urls/:shortURL', (req, res) => {
   const shortURL = req.params.shortURL;
- res.redirect(`/urls/${shortURL}`);
+  const userID = req.cookies.user_id;
+  console.log(`the shortURL is ${shortURL}`);
+  console.log(`the userID is ${userID}`);
+  console.log(`the id of this URL is: ${urlDatabase[shortURL]["userID"]}`);
+  if (urlDatabase[shortURL]["userID"] === userID) {
+  res.redirect(`/urls/${shortURL}`);
+  } else {
+    res.status(403).send(`You do not have permission to edit this URL entry!`)
+  }
 });
 
 //updating a URL entry
 app.post('/urls/:shortURL/update', (req, res) => {
-  const shortURL = req.params.shortURL
-  urlDatabase[shortURL]["longURL"] = `http://${req.body.longURL}`
-  res.redirect(`/urls/${shortURL}`);
+  const shortURL = req.params.shortURL;
+  const userID = req.cookies.user_id
+  if (urlDatabase[shortURL]["userID"] === userID) {
+    if(urlDatabase[shortURL]["longURL"].includes('://')) {
+      urlDatabase[shortURL]["longURL"] = req.body.longURL
+    } else {
+      urlDatabase[shortURL]["longURL"] = `http://${req.body.longURL}`;
+    }
+    res.redirect(`/urls/${shortURL}`);
+  } else {
+    res.status(403).send(`You do not have permission to edit this URL entry!`)
+    }
 });
 
 //setting the port & message
