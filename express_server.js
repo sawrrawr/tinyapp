@@ -8,21 +8,17 @@ const getUserByEmail = require('./helpers');
 // middleware setup
 const bcrypt = require('bcryptjs');
 const salt = bcrypt.genSaltSync(10);
-
 const cookieSession = require("cookie-session");
 app.use(cookieSession({
   name: 'session',
   keys: ["4b1f6da9-5554-4c3a-95e9-b5c3e5181894", "766f917e-54f8-4517-9943-5360c8baf46f"],
 }));
-
 app.set('view engine', 'ejs');
-
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
 
 // generates the shortURL
 const charSet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-
 const generateRandomString = () => {
   let newString = [];
   for (let i = 0; i < 6; i++) {
@@ -55,10 +51,9 @@ const users = {
     email: "sawrrawr@gmail.com",
     password: bcrypt.hashSync("123", salt),
   },
+};
 
-}
-
-//Authentication functoin
+//Authentication function
 const auth = (emailAddress, pwd) => {
   const listOfUsers = Object.values(users);
   let result;
@@ -73,39 +68,37 @@ const auth = (emailAddress, pwd) => {
       return result = 'failedEmail';
     }
   }
-  return result
-}
+  return result;
+};
 
 // get URLs for user
 const urlsForUser = (id) => {
   const userURLS = {};
-  const listOfURLS = Object.keys(urlDatabase)
-  console.log('list of urls', listOfURLS);
-for (const entry of listOfURLS) {
-  if (urlDatabase[entry].userID === id) {
-    userURLS[entry] = urlDatabase[entry]
+  const listOfURLS = Object.keys(urlDatabase);
+  for (const entry of listOfURLS) {
+    if (urlDatabase[entry].userID === id) {
+      userURLS[entry] = urlDatabase[entry];
+    }
   }
-}
-console.log(`url object from function: ${userURLS}`)
-return userURLS;
-}
+  return userURLS;
+};
 
 
 // home page
 app.get("/", (req, res) => {
-  const templateVars = { user: users[req.session.user_id], }
+  const templateVars = { user: users[req.session.user_id], };
   res.render("home", templateVars);
 });
 
 //login page
 app.get('/login', (req, res) => {
-  const templateVars = { user: users[req.session.user_id], }
-  res.render("login", templateVars)
+  const templateVars = { user: users[req.session.user_id], };
+  res.render("login", templateVars);
 });
 
 //login
 app.post('/login', (req, res) => {
-  const listOfUsers = Object.values(users)
+  const listOfUsers = Object.values(users);
   const user_email = req.body.email;
   const user_pw = req.body.password;
   let user_id;
@@ -129,31 +122,31 @@ app.post('/login', (req, res) => {
 app.post('/logout', (req, res) => {
   req.session.user_id = null;
   res.redirect('/');
-})
+});
 
 //registration page
 app.get('/register', (req, res) => {
-  const templateVars = { user: users[req.session.user_id], }
-  res.render("register", templateVars)
+  const templateVars = { user: users[req.session.user_id], };
+  res.render("register", templateVars);
 });
 
 // register for new account
 app.post('/register', (req, res) => {
-  const user_email = req.body.email
-  newUserId = generateRandomString();
+  const user_email = req.body.email;
+  const newUserId = generateRandomString();
   if (!user_email) {
-    res.status(400).send(`Please enter an email address`)
+    res.status(400).send(`Please enter an email address`);
   }
   if (!user_email) {
     res.status(400).send(`Please enter a password`);
   }
-  const emailCheck = getUserByEmail(user_email, users)
+  const emailCheck = getUserByEmail(user_email, users);
   if (emailCheck === undefined) {
     users[newUserId] = {
       "id": newUserId,
       "email": req.body.email,
       "password": bcrypt.hashSync(req.body.password, salt),
-    }
+    };
     req.session['user_id'] = newUserId;
     res.redirect('/urls');
   } else {
@@ -174,8 +167,8 @@ app.get("/urls", (req, res) => {
 
 //page to create a new shortURL
 app.get("/urls/new", (req, res) => {
-    const templateVars = { user: users[req.session.user_id], }
-    if (req.session.user_id) {
+  const templateVars = { user: users[req.session.user_id], };
+  if (req.session.user_id) {
     res.render("urls_new", templateVars);
   } else if (req.session.user_id === 'undefined' || !req.session.user_id) {
     res.redirect('/urls');
@@ -192,12 +185,11 @@ app.get("/urls/:id", (req, res) => {
 app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
   if (!urlDatabase.shortURL) {
-    if(urlDatabase[shortURL]["longURL"].includes('://')) {
-      urlDatabase[shortURL]["longURL"] = req.body.longURL
+    if (urlDatabase[shortURL]["longURL"].includes('://')) {
+      urlDatabase[shortURL]["longURL"] = req.body.longURL;
     }
-  urlDatabase[shortURL]["longURL"] = `http://${req.body.longURL}`;
-  };
-  console.log(urlDatabase[shortURL]);
+    urlDatabase[shortURL]["longURL"] = `http://${req.body.longURL}`;
+  }
   res.redirect(`/urls/${shortURL}`);         // Respond to user: redirecting to their new entry
 });
 
@@ -212,26 +204,26 @@ app.get("/u/:shortURL", (req, res) => {
 
 //handling the delete button for an entry
 app.post('/urls/:shortURL/delete', (req, res) => {
-  const shortURL = req.params.shortURL
-  const userID = req.session.user_id
+  const shortURL = req.params.shortURL;
+  const userID = req.session.user_id;
   if (urlDatabase[shortURL]["userID"] === userID) {
-  delete urlDatabase[req.params.shortURL];
-  res.redirect('/urls');
+    delete urlDatabase[req.params.shortURL];
+    res.redirect('/urls');
   } else {
-  res.status(403).send(`You do not have permission to delete this URL entry!`)
+    res.status(403).send(`You do not have permission to delete this URL entry!`);
   }
 });
 
 app.get('/urls/:shortURL', (req, res) => {
   const shortURL = req.params.shortURL;
-  const userID = req.session.user_id
+  const userID = req.session.user_id;
   console.log(`the shortURL is ${shortURL}`);
   console.log(`the userID is ${userID}`);
   console.log(`the id of this URL is: ${urlDatabase[shortURL]["userID"]}`);
   if (urlDatabase[shortURL]["userID"] === userID) {
-  res.redirect(`/urls/${shortURL}`);
+    res.redirect(`/urls/${shortURL}`);
   } else {
-    res.status(403).send(`You do not have permission to edit this URL entry!`)
+    res.status(403).send(`You do not have permission to edit this URL entry!`);
   }
 });
 
@@ -244,26 +236,26 @@ app.post('/urls/:shortURL', (req, res) => {
   console.log(`the userID is ${userID}`);
   console.log(`the id of this URL is: ${urlDatabase[shortURL]["userID"]}`);
   if (urlDatabase[shortURL]["userID"] === userID) {
-  res.redirect(`/urls/${shortURL}`);
+    res.redirect(`/urls/${shortURL}`);
   } else {
-    res.status(403).send(`You do not have permission to edit this URL entry!`)
+    res.status(403).send(`You do not have permission to edit this URL entry!`);
   }
 });
 
 //updating a URL entry
 app.post('/urls/:shortURL/update', (req, res) => {
   const shortURL = req.params.shortURL;
-  const userID = req.session.user_id
+  const userID = req.session.user_id;
   if (urlDatabase[shortURL]["userID"] === userID) {
-    if(urlDatabase[shortURL]["longURL"].includes('://')) {
-      urlDatabase[shortURL]["longURL"] = req.body.longURL
+    if (urlDatabase[shortURL]["longURL"].includes('://')) {
+      urlDatabase[shortURL]["longURL"] = req.body.longURL;
     } else {
       urlDatabase[shortURL]["longURL"] = `http://${req.body.longURL}`;
     }
     res.redirect(`/urls/${shortURL}`);
   } else {
-    res.status(403).send(`You do not have permission to edit this URL entry!`)
-    }
+    res.status(403).send(`You do not have permission to edit this URL entry!`);
+  }
 });
 
 //setting the port & message
