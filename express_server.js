@@ -2,27 +2,27 @@ const express = require("express");
 const app = express();
 const PORT = 8080;
 
-//hashing module
+//imported functions
+const getUserByEmail = require('./helpers');
+
+// middleware setup
 const bcrypt = require('bcryptjs');
 const salt = bcrypt.genSaltSync(10);
 
-//using cookie sessions
 const cookieSession = require("cookie-session");
 app.use(cookieSession({
   name: 'session',
   keys: ["4b1f6da9-5554-4c3a-95e9-b5c3e5181894", "766f917e-54f8-4517-9943-5360c8baf46f"],
 }));
 
-//setting the view engine to ejs
 app.set('view engine', 'ejs');
 
-// using body parser
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
 
+// generates the shortURL
 const charSet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
-// generates the shortURL
 const generateRandomString = () => {
   let newString = [];
   for (let i = 0; i < 6; i++) {
@@ -32,6 +32,7 @@ const generateRandomString = () => {
   return newString.join("");
 };
 
+//objects
 const urlDatabase = {
   "b2xVn2": {
     longURL: "http://www.lighthouselabs.ca",
@@ -88,30 +89,6 @@ for (const entry of listOfURLS) {
 console.log(`url object from function: ${userURLS}`)
 return userURLS;
 }
-
-//email address lookup
-const getUserByEmail = (emailAddress, database) => {
-  const listOfUsers = Object.values(database);
-  for (const user of listOfUsers) {
-    if (user['email'] === emailAddress) {
-      return database[user];
-    } else {
-      return null;
-    }
-  }
-};
-
-// const emailAlreadyExists = (emailAddress) => {
-//   const listOfUsers = Object.values(users);
-//   for (const user of listOfUsers) {
-//     if (user["email"] === emailAddress) {
-//       //email already exists
-//       return true;
-//     }
-//     //email doesn't already exist
-//     return false;
-//   }
-// };
 
 
 // home page
@@ -171,7 +148,7 @@ app.post('/register', (req, res) => {
     res.status(400).send(`Please enter a password`);
   }
   const emailCheck = getUserByEmail(user_email, users)
-  if (emailCheck === null) {
+  if (emailCheck === undefined) {
     users[newUserId] = {
       "id": newUserId,
       "email": req.body.email,
