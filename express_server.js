@@ -116,7 +116,7 @@ app.post('/login', (req, res) => {
     req.session['user_id'] = user_id;
     res.redirect('/urls');
   } else if (loginAttempt === 'failedEmail') {
-    res.status(403).send(`Invalid Email`);
+    res.status(403).send(`Invalid Email - Have you registered an account yet? Go back and click 'Register'!`);
   } else if (loginAttempt === 'failedPwd') {
     res.status(403).send(`Invalid Password`);
   }
@@ -193,7 +193,7 @@ app.post("/urls", (req, res) => {
         "longURL": req.body.longURL,
         "userID": req.session.user_id,
       }
-      urlDatabase[shortURL] = newEntry;
+      urlDatabase[shortURL] = newUrlEntry;
     } else {
       newUrlEntry = {
         "longURL": `http://${req.body.longURL}`,
