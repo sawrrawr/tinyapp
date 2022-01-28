@@ -1,4 +1,8 @@
 const express = require("express");
+const bcrypt = require('bcryptjs');
+const cookieSession = require("cookie-session");
+const bodyParser = require("body-parser");
+
 const app = express();
 const PORT = 8080;
 
@@ -6,15 +10,14 @@ const PORT = 8080;
 const getUserByEmail = require('./helpers');
 
 // middleware setup
-const bcrypt = require('bcryptjs');
 const salt = bcrypt.genSaltSync(10);
-const cookieSession = require("cookie-session");
 app.use(cookieSession({
   name: 'session',
   keys: ["4b1f6da9-5554-4c3a-95e9-b5c3e5181894", "766f917e-54f8-4517-9943-5360c8baf46f"],
 }));
+
 app.set('view engine', 'ejs');
-const bodyParser = require("body-parser");
+
 app.use(bodyParser.urlencoded({extended: true}));
 
 
@@ -54,7 +57,6 @@ const generateRandomString = () => {
   }
   return newString.join("");
 };
-const result = generateRandomString();
 
 //Authentication function
 const authorizeLogin = (emailAddress, pwd) => {
@@ -168,6 +170,12 @@ app.get("/urls", (req, res) => {
   }
 });
 
+// lists the particulars of one longURL/shortURL pair
+app.get("/urls/:id", (req, res) => {
+  const templateVars = { shortURL: req.params.id, longURL: urlDatabase[req.params.id].longURL, user: users[req.session.user_id], };
+  res.render("urls_show", templateVars);
+});
+
 //page to create a new longURL/shortURL pair
 app.get("/urls/new", (req, res) => {
   const templateVars = { user: users[req.session.user_id], };
@@ -176,12 +184,6 @@ app.get("/urls/new", (req, res) => {
   } else if (req.session.user_id === 'undefined' || !req.session.user_id) {
     res.redirect('/urls');
   }
-});
-
-// lists the particulars of one longURL/shortURL pair
-app.get("/urls/:id", (req, res) => {
-  const templateVars = { shortURL: req.params.id, longURL: urlDatabase[req.params.id].longURL, user: users[req.session.user_id], };
-  res.render("urls_show", templateVars);
 });
 
 // creates a new shortURL/longURL pair
@@ -269,5 +271,5 @@ app.post('/urls/:shortURL/update', (req, res) => {
 });
 
 //setting the port & message
-app.listen(PORT);
-console.log(`Server is listening on port ${PORT}`);
+app.listen(PORT, () => console.log(`Server is listening on port ${PORT}`));
+

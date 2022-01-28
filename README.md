@@ -12,7 +12,7 @@ TinyApp is a full stack web application built with Node and Express that allows 
 
 !["TinyApp - New URL Entry"](https://github.com/sawrrawr/tinyapp/blob/8a96e1fae3b90c1dac92e3db97a42ee94f7d69fc/docs/TinyApp-createdEntry.png?raw=true)
 
-!["TinyApp - Index of User's URLs"](https://github.com/sawrrawr/tinyapp/blob/8a96e1fae3b90c1dac92e3db97a42ee94f7d69fc/docs/TinyApp-urlsPage.png?raw=true)
+!["TinyApp - Index of User's URLs"](https://github.com/sawrrawr/tinyapp/blob/master/docs/TinyApp-myURLs.png?raw=true)
 
 ## Dependencies
 
