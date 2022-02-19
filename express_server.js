@@ -61,16 +61,12 @@ const generateRandomString = () => {
 //Authentication function
 const authorizeLogin = (emailAddress, pwd) => {
   const listOfUsers = Object.values(users);
-  let result;
+  let result = "loginFailure"  
+  console.log(`list of users used in authorize login function: `, listOfUsers)
   for (const user of listOfUsers) {
+    console.log(`email check: `, emailAddress, user.email)
     if (user.email === emailAddress  && bcrypt.compareSync(pwd, user.password) === true) {
-      return result = 'success';
-    }
-    if (user.email === emailAddress  && bcrypt.compareSync(pwd, user.password) === false) {
-      return result = 'failedPwd';
-    }
-    if (user.email !== emailAddress) {
-      return result = 'failedEmail';
+      result = 'success';
     }
   }
   return result;
@@ -117,11 +113,9 @@ app.post('/login', (req, res) => {
     }
     req.session['user_id'] = user_id;
     res.redirect('/urls');
-  } else if (loginAttempt === 'failedEmail') {
-    res.status(403).send(`Invalid Email - Have you registered an account yet? Go back and click 'Register'!`);
-  } else if (loginAttempt === 'failedPwd') {
-    res.status(403).send(`Invalid Password`);
-  }
+  } else if (loginAttempt === 'loginFailure') {
+    res.status(403).send(`Invalid email or password!`);
+  } 
 });
 
 //logout request
